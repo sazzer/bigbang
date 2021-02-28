@@ -1,3 +1,4 @@
+pub(super) mod component;
 mod span;
 
 use actix_cors::Cors;
@@ -14,15 +15,11 @@ pub struct Server {
 
 impl Server {
     /// Create a new instance of the HTTP Server.
-    #[tracing::instrument(name = "Server::new")]
-    pub fn new(prometheus: Registry) -> Self {
+    pub fn new(port: u16, prometheus: Registry) -> Self {
         tracing::debug!("Building HTTP Server");
         tracing::debug!("Built HTTP Server");
 
-        Self {
-            port: 8000,
-            prometheus,
-        }
+        Self { port, prometheus }
     }
 
     /// Start the HTTP Server processing requests.

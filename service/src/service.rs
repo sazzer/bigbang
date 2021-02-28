@@ -14,11 +14,13 @@ impl Service {
 
         let prometheus = Registry::new();
 
-        let server = Server::new(prometheus);
+        let server = crate::server::component::Component::builder(prometheus).build();
 
         tracing::debug!("Built Big Bang");
 
-        Self { server }
+        Self {
+            server: server.server,
+        }
     }
 
     /// Start the service processing requests
