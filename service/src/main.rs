@@ -1,5 +1,7 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
+mod service;
+
 use dotenv::dotenv;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
@@ -20,5 +22,6 @@ async fn main() {
     let subscriber = Registry::default().with(telemetry);
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
-    tracing::debug!("Starting");
+    let service = service::Service::new().await;
+    service.start().await;
 }
