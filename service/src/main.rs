@@ -3,9 +3,43 @@
 mod server;
 mod service;
 
+use config::{Config, Environment};
 use dotenv::dotenv;
+use serde::Deserialize;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
+
+/// Representation of the application settings that will be loaded from the environment
+#[derive(Debug, Deserialize)]
+struct Settings {
+    /// The port on which the HTTP server should listen on
+    pub port: u16,
+}
+
+impl Default for Settings {
+    /// Construct the settings from the environment
+    ///
+    /// # Returns
+    /// The Settings object, loaded from the environment variables
+    fn default() -> Self {
+        let mut s = Config::new();
+        s.set_default("port", 8000)
+            .expect("Failed to set default value for 'port'");
+
+        s.merge(Environment::default())
+            .expect("Failed to load environment properties");
+
+        s.try_into().expect("Failed to build settings from config")
+    }
+}
+
+impl From<Settings> for service::Settings {
+    fn from(settings: Settings) -> Self {
+        Self {
+            port: settings.port,
+        }
+    }
+}
 
 #[actix_rt::main]
 async fn main() {
@@ -23,6 +57,9 @@ async fn main() {
     let subscriber = Registry::default().with(telemetry);
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
-    let service = service::Service::new().await;
+    let settings = Settings::default();
+    tracing::debug!(settings = ?settings, "Loaded settings");
+
+    let service = service::Service::new(settings.into()).await;
     service.start().await;
 }

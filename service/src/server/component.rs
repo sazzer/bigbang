@@ -9,18 +9,19 @@ pub struct Component {
 /// Builder for building the HTTP Server component
 pub struct Builder {
     prometheus: Registry,
+    port: u16,
 }
 
 impl Component {
-    pub fn builder(prometheus: Registry) -> Builder {
-        Builder { prometheus }
+    pub fn builder(prometheus: Registry, port: u16) -> Builder {
+        Builder { prometheus, port }
     }
 }
 
 impl Builder {
     pub fn build(self) -> Component {
         Component {
-            server: Server::new(8000, self.prometheus),
+            server: Server::new(self.port, self.prometheus),
         }
     }
 }

@@ -6,15 +6,21 @@ pub struct Service {
     server: Server,
 }
 
+#[derive(Debug)]
+pub struct Settings {
+    pub port: u16,
+}
+
 impl Service {
     /// Create a new instance of the service
     #[tracing::instrument(name = "Service::new")]
-    pub async fn new() -> Self {
+    pub async fn new(settings: Settings) -> Self {
         tracing::debug!("Building Big Bang");
 
         let prometheus = Registry::new();
 
-        let server = crate::server::component::Component::builder(prometheus).build();
+        let server =
+            crate::server::component::Component::builder(prometheus, settings.port).build();
 
         tracing::debug!("Built Big Bang");
 

@@ -22,6 +22,8 @@ actix-web = "3.3.2"
 actix-web-prom = "0.5.1"
 prometheus = "0.11.0"
 futures = "0.3.12"
+serde = {version = "1.0.123", features = ["derive"] }
+config = "0.10.1"
 
 [package.metadata.commands]
 clippy = "find . -name *.rs | grep -v target | xargs touch; cargo clippy"
