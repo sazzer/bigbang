@@ -414,6 +414,7 @@ dependencies = [
  "actix-web-prom",
  "dotenv",
  "env_logger",
+ "futures",
  "opentelemetry",
  "opentelemetry-jaeger",
  "prometheus",
