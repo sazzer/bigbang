@@ -8,3 +8,11 @@ services:
       - "127.0.0.1:6832:6832/udp"
       - "127.0.0.1:16686:16686"
       - "127.0.0.1:14268:14268"
+  bigbang-dev-postgres:
+    image: postgres:12.4-alpine
+    environment:
+      POSTGRES_DB: bigbang
+      POSTGRES_USER: bigbang
+      POSTGRES_PASSWORD: bigbang
+    ports:
+      - "127.0.0.1:45432:5432"
