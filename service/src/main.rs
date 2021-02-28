@@ -1,5 +1,6 @@
-#![deny(clippy::all, clippy::pedantic, clippy::nursery)]
+#![deny(clippy::all, clippy::pedantic)]
 
+mod server;
 mod service;
 
 use dotenv::dotenv;
