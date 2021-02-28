@@ -1,6 +1,7 @@
 use std::{str::FromStr, sync::Arc};
 
 use deadpool_postgres::{Manager, ManagerConfig, Pool, RecyclingMethod};
+use prometheus::Registry;
 
 use super::Database;
 
@@ -11,8 +12,8 @@ pub struct Component {
 
 impl Component {
     /// Create a new database component.
-    #[tracing::instrument(name = "Database::Component::new", skip())]
-    pub async fn new(url: &str) -> Self {
+    #[tracing::instrument(name = "Database::Component::new", skip(prometheus))]
+    pub async fn new(url: &str, prometheus: &Registry) -> Self {
         tracing::debug!("Building database connection");
         let pg_config = tokio_postgres::Config::from_str(url).expect("Invalid database URL");
 
@@ -28,7 +29,7 @@ impl Component {
 
         tracing::debug!("Built database connection");
 
-        let db = Database { pool };
+        let db = Database::new(pool, prometheus);
 
         super::migrate::migrate(&db).await;
 

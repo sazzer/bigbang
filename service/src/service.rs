@@ -19,7 +19,8 @@ impl Service {
         tracing::debug!("Building Big Bang");
 
         let prometheus = Registry::new();
-        let _db = crate::database::component::Component::new(&settings.database_url).await;
+        let _db =
+            crate::database::component::Component::new(&settings.database_url, &prometheus).await;
 
         let server = crate::server::component::Component::new(prometheus, settings.port);
 

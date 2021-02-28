@@ -1,21 +1,73 @@
+use std::sync::Arc;
+
 use deadpool::managed::Object;
 use deadpool_postgres::{ClientWrapper, Pool};
 use postgres_types::ToSql;
+use prometheus::{IntCounter, IntCounterVec, IntGauge, Opts, Registry};
 use tokio_postgres::{IsolationLevel, Row};
 
 pub(super) mod component;
 mod migrate;
 
+struct Metrics {
+    connection_gauge: IntGauge,
+    transaction_gauge: IntGauge,
+    connection_count: IntCounter,
+    transaction_count: IntCounterVec,
+}
+
 /// Wrapper around a database connection pool
 pub struct Database {
     pool: Pool,
+    metrics: Arc<Metrics>,
 }
 
+impl Database {
+    fn new(pool: Pool, prometheus: &Registry) -> Self {
+        let connection_gauge =
+            IntGauge::new("conections_active", "Number of connections checked out").unwrap();
+        let transaction_gauge =
+            IntGauge::new("transactions_active", "Number of active transactions").unwrap();
+        let connection_count =
+            IntCounter::new("connections", "Number of connections ever issued").unwrap();
+        let transaction_count = IntCounterVec::new(
+            Opts::new(
+                "transactions_states",
+                "Number of transactions ever issued by status",
+            ),
+            &["status"],
+        )
+        .unwrap();
+
+        prometheus
+            .register(Box::new(connection_gauge.clone()))
+            .unwrap();
+        prometheus
+            .register(Box::new(transaction_gauge.clone()))
+            .unwrap();
+        prometheus
+            .register(Box::new(connection_count.clone()))
+            .unwrap();
+        prometheus
+            .register(Box::new(transaction_count.clone()))
+            .unwrap();
+
+        Self {
+            pool,
+            metrics: Arc::new(Metrics {
+                connection_gauge,
+                transaction_gauge,
+                connection_count,
+                transaction_count,
+            }),
+        }
+    }
+}
 /// Wrapper around a connection to the database
-pub struct Connection(Object<ClientWrapper, tokio_postgres::Error>);
+pub struct Connection(Object<ClientWrapper, tokio_postgres::Error>, Arc<Metrics>);
 
 /// Wrapper around a database transaction
-pub struct Transaction<'a>(Option<deadpool_postgres::Transaction<'a>>);
+pub struct Transaction<'a>(Option<deadpool_postgres::Transaction<'a>>, Arc<Metrics>);
 
 impl Database {
     /// Get a new connection to the database from the connection pool
@@ -27,7 +79,10 @@ impl Database {
             .await
             .expect("Failed to get database connection");
 
-        Connection(conn)
+        self.metrics.connection_gauge.inc();
+        self.metrics.connection_count.inc();
+
+        Connection(conn, self.metrics.clone())
     }
 }
 
@@ -46,22 +101,31 @@ impl Connection {
             .await
             .expect("Failed to start transaction");
 
-        Transaction(Some(transaction))
+        self.1.transaction_gauge.inc();
+        self.1.transaction_count.with_label_values(&["start"]).inc();
+
+        Transaction(Some(transaction), self.1.clone())
     }
 }
 
 impl Drop for Connection {
     fn drop(&mut self) {
         tracing::debug!("Returning database connection");
+        self.1.connection_gauge.dec();
     }
 }
 
 impl<'a> Drop for Transaction<'a> {
     fn drop(&mut self) {
         tracing::debug!("Finishing transaction");
+        self.1.transaction_gauge.dec();
 
         if self.0.is_some() {
             tracing::warn!("Transaction was not committed and will be rolled back");
+            self.1
+                .transaction_count
+                .with_label_values(&["rollback"])
+                .inc();
         }
     }
 }
@@ -182,6 +246,11 @@ impl<'a> Transaction<'a> {
 
         let tx = self.0.take().unwrap();
         let result = tx.commit().await;
+
+        self.1
+            .transaction_count
+            .with_label_values(&["commit"])
+            .inc();
 
         span.record("error", &result.is_err());
 
