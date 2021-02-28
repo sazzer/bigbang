@@ -9,6 +9,7 @@ pub struct Service {
 #[derive(Debug)]
 pub struct Settings {
     pub port: u16,
+    pub database_url: String,
 }
 
 impl Service {
@@ -18,9 +19,9 @@ impl Service {
         tracing::debug!("Building Big Bang");
 
         let prometheus = Registry::new();
+        let _db = crate::database::component::Component::new(&settings.database_url).await;
 
-        let server =
-            crate::server::component::Component::builder(prometheus, settings.port).build();
+        let server = crate::server::component::Component::new(prometheus, settings.port);
 
         tracing::debug!("Built Big Bang");
 

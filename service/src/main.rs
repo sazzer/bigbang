@@ -1,5 +1,6 @@
 #![deny(clippy::all, clippy::pedantic)]
 
+mod database;
 mod server;
 mod service;
 
@@ -14,6 +15,8 @@ use tracing_subscriber::Registry;
 struct Settings {
     /// The port on which the HTTP server should listen on
     pub port: u16,
+    /// The connection URL for the database
+    pub database_url: String,
 }
 
 impl Default for Settings {
@@ -37,6 +40,7 @@ impl From<Settings> for service::Settings {
     fn from(settings: Settings) -> Self {
         Self {
             port: settings.port,
+            database_url: settings.database_url,
         }
     }
 }
