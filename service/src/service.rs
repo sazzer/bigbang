@@ -1,4 +1,5 @@
 use crate::server::Server;
+use prometheus::Registry;
 
 /// The actual service
 pub struct Service {
@@ -11,7 +12,9 @@ impl Service {
     pub async fn new() -> Self {
         tracing::debug!("Building Big Bang");
 
-        let server = Server::new();
+        let prometheus = Registry::new();
+
+        let server = Server::new(prometheus);
 
         tracing::debug!("Built Big Bang");
 
@@ -19,7 +22,7 @@ impl Service {
     }
 
     /// Start the service processing requests
-    pub async fn start(&self) {
+    pub async fn start(self) {
         tracing::info!("Starting Big Bang");
         self.server.start().await;
     }
