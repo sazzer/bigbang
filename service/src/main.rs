@@ -1,6 +1,9 @@
 #![deny(clippy::all, clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
 
 mod database;
+#[cfg(test)]
+mod integration;
 mod server;
 mod service;
 
