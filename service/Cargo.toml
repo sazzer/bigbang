@@ -22,3 +22,6 @@ actix-web = "3.3.2"
 actix-web-prom = "0.5.1"
 prometheus = "0.11.0"
 futures = "0.3.12"
+
+[package.metadata.commands]
+clippy = "find . -name *.rs | grep -v target | xargs touch; cargo clippy"
