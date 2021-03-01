@@ -3,6 +3,7 @@
 
 mod database;
 mod home;
+mod http;
 #[cfg(test)]
 mod integration;
 mod server;
