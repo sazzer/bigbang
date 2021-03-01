@@ -1,12 +1,14 @@
 mod database;
 mod tests;
 
+use actix_http::Request;
 use database::TestDatabase;
 
-use crate::service::{Service, Settings};
+use crate::service::{testing::TestResponse, Service, Settings};
 
 /// Test Suite to make testing the service easier.
 pub struct TestSuite {
+    #[allow(dead_code)]
     database: TestDatabase,
     service: Service,
 }
@@ -24,5 +26,10 @@ impl TestSuite {
         .await;
 
         Self { database, service }
+    }
+
+    /// Inject a request into the service and get the response.
+    pub async fn inject(&self, req: Request) -> TestResponse {
+        self.service.inject(req).await
     }
 }

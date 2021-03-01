@@ -1,3 +1,6 @@
+#[cfg(test)]
+pub mod testing;
+
 use crate::server::Server;
 use prometheus::Registry;
 
