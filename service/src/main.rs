@@ -2,6 +2,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 mod database;
+mod home;
 #[cfg(test)]
 mod integration;
 mod server;

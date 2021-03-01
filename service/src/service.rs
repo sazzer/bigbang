@@ -25,7 +25,11 @@ impl Service {
         let _db =
             crate::database::component::Component::new(&settings.database_url, &prometheus).await;
 
-        let server = crate::server::component::Component::new(prometheus, settings.port);
+        let home = crate::home::component::Builder::default().build();
+
+        let server = crate::server::component::Builder::default()
+            .with_component(home)
+            .build(prometheus, settings.port);
 
         tracing::debug!("Built Big Bang");
 
