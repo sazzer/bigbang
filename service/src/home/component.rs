@@ -18,5 +18,7 @@ impl Builder {
 }
 
 impl Configurer for Component {
-    fn configure_server(&self, _config: &mut ServiceConfig) {}
+    fn configure_server(&self, config: &mut ServiceConfig) {
+        super::http::configure_server(config);
+    }
 }
