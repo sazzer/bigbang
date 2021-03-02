@@ -1,3 +1,5 @@
+pub mod hal;
+
 use actix_http::{
     http::{header::Header, HeaderMap, StatusCode},
     Error, Response as HttpResponse,
